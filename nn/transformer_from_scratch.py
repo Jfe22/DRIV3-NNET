@@ -28,7 +28,11 @@ class PositionalEncoding(keras.layers.Layer):
         return tf.cast(pos_encoding, dtype=tf.float32)
 
     def call(self, inputs):
-        return inputs + self.pos_encoding[:, :tf.shape(inputs)[1], :]
+        seq_length = tf.shape(inputs)[1]
+        pos_encoding = tf.slice(self.pos_encoding, [0, 0, 0], [1, seq_length, -1])
+        return inputs + pos_encoding
+
+    
 
 
 # Custom Layer: Transformer Encoder Layer
