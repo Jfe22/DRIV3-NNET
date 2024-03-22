@@ -3,8 +3,8 @@ from transformers import BertTokenizer
 from torch.utils.data import TensorDataset
 
 # Read CSV files
-train_df = pd.read_csv('train.csv')
-eval_df = pd.read_csv('eval.csv')
+train_df = pd.read_csv('../dataset/train.csv')
+eval_df = pd.read_csv('../dataset/eval.csv')
 
 # Preprocess data
 # Assuming train_df and eval_df have columns 'sensor_data' and 'label'
