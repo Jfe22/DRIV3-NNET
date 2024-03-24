@@ -1,10 +1,11 @@
 import pandas as pd
+import torch
 from transformers import BertTokenizer
 from torch.utils.data import TensorDataset
 
 # Read CSV files
-train_df = pd.read_csv('../dataset/train.csv')
-eval_df = pd.read_csv('../dataset/eval.csv')
+train_df = pd.read_csv('../dataset/bmw_full_labeled_dataset.csv')
+eval_df = pd.read_csv('../dataset/bmw_full_labeled_dataset.csv')
 
 # Preprocess data
 # Assuming train_df and eval_df have columns 'sensor_data' and 'label'
@@ -12,6 +13,11 @@ train_texts = train_df['sensor_data'].tolist()
 eval_texts = eval_df['sensor_data'].tolist()
 train_labels = train_df['label'].tolist()
 eval_labels = eval_df['label'].tolist()
+
+print(train_texts[0])
+print(train_labels[0])
+print(eval_texts[0])
+print(eval_labels[0])
 
 # Tokenization
 tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
