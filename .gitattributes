@@ -1,0 +1,2 @@
+nn/models filter=lfs diff=lfs merge=lfs -text
+nn/models/* filter=lfs diff=lfs merge=lfs -text
