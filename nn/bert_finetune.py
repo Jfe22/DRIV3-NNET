@@ -3,6 +3,7 @@ from transformers import TrainingArguments, Trainer
 import torch
 from serializer_for_BERT import train_dataset, eval_dataset
 from transformers import DataCollatorWithPadding
+from sklearn.metrics import classification_report, precision_score, recall_score, f1_score
 
 class CustomDataCollator(DataCollatorWithPadding):
     def __init__(self, tokenizer):
@@ -35,7 +36,7 @@ model = BertForSequenceClassification.from_pretrained('bert-base-uncased', num_l
 training_args = TrainingArguments(
     output_dir='./output',
     per_device_train_batch_size=8,
-    num_train_epochs=3,
+    num_train_epochs=30,
     logging_dir='./logs',
     logging_steps=100,
     save_steps=1000,
@@ -57,3 +58,58 @@ trainer = Trainer(
 
 # Fine-tune the model
 trainer.train()
+
+# Evaluate the model
+print(trainer.evaluate())
+
+# Save the model
+model.save_pretrained('./models/BERT_fulldataset_30epochs')
+
+
+
+# Evaluate the model
+eval_results = trainer.evaluate()
+
+# Get predictions
+predictions = trainer.predict(eval_dataset)
+predicted_labels = predictions.predictions.argmax(axis=1)
+
+# Get true labels
+true_labels = []
+for _, _, label in eval_dataset:
+    true_labels.append(label.item())  # Convert tensor to Python int
+
+
+# Calculate classification report
+report = classification_report(true_labels, predicted_labels)
+
+print("Classification Report:")
+print(report)
+
+# Additional metrics
+accuracy = (predicted_labels == true_labels).mean()
+precision = precision_score(true_labels, predicted_labels, average='macro')
+recall = recall_score(true_labels, predicted_labels, average='macro')
+f1 = f1_score(true_labels, predicted_labels, average='macro')
+
+print(f"Accuracy: {accuracy}")
+print(f"Precision: {precision}")
+print(f"Recall: {recall}")
+print(f"F1-score: {f1}")
+
+
+# Some more metrics 
+# Get true labels
+true_labels = []
+correct_count = 0
+total_count = len(eval_dataset)
+for _, _, label in eval_dataset:
+    true_label = label.item()
+    true_labels.append(true_label)
+    if true_label == predicted_labels[len(true_labels) - 1]:
+        correct_count += 1
+
+# Print evaluation summary
+print("Eval dataset size:", total_count)
+print("Correct answers:", correct_count)
+print("Wrong answers:", total_count - correct_count)
