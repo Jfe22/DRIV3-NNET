@@ -27,7 +27,7 @@ class CustomDataCollator(DataCollatorWithPadding):
         key: torch.tensor([getattr(f, key) for f in features]) for key in features[0].__dict__.keys()
       }
 
-train_dataset, eval_dataset = get_tensors('../dataset/bmw_accelerometer_only_labeled_dataset.csv')
+train_dataset, eval_dataset = get_tensors('../dataset/bmw_accelerometer_only_labeled_normalized_nodate_dataset.csv')
 
 # Load pre-trained BERT model and tokenizer
 tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
@@ -64,7 +64,7 @@ trainer.train()
 print(trainer.evaluate())
 
 # Save the model
-model.save_pretrained('../models/BERT_accelometer_3epochs')
+model.save_pretrained('../models/BERT_accelometer_normalized_no_date_3epochs')
 
 
 
@@ -79,7 +79,6 @@ predicted_labels = predictions.predictions.argmax(axis=1)
 true_labels = []
 for _, _, label in eval_dataset:
   true_labels.append(label.item())  # Convert tensor to Python int
-
 
 # Calculate classification report
 report = classification_report(true_labels, predicted_labels)
