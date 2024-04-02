@@ -7,7 +7,6 @@ def eval_driving(dataset_name, model_name):
   model = BertForSequenceClassification.from_pretrained("../models/" + model_name)
   eval_dataset = get_tensors("../dataset/" + dataset_name)[1] 
 
-  # TODO: CHECK CUDA
   device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
   model.to(device)
   model.eval()

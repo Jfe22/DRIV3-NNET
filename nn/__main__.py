@@ -1,9 +1,10 @@
 from model_train import train_driving
 from model_eval import eval_driving
 
-train_driving('bmw_accelerometer_and_gyroscope_labeled_normalized_dataset.csv',
-              'BERT_accelerometer_and_gyroscope_normalized_30epochs', 
-              30)
+#dataset = "bmw_accelerometer_and_gyroscope_labeled_normalized_dataset.csv"
+#model_name = "BERT_accelerometer_and_gyroscope_normalized_30epochs"
+dataset = "bmw_accelerometer_and_gyroscope_labeled_normalized_nodate_dataset.csv"
+model_name = "BERT_accelerometer_and_gyroscope_normalized_nodate_30epochs"
 
-eval_driving('bmw_accelerometer_and_gyroscope_labeled_normalized_dataset.csv',
-             'BERT_accelerometer_and_gyroscope_normalized_30epochs') 
+train_driving(dataset, model_name, 30)
+eval_driving(dataset, model_name) 
