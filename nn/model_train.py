@@ -40,6 +40,7 @@ def train_driving(dataset, new_model_name, epochs):
     save_steps=1000,
     evaluation_strategy="steps",
     eval_steps=500,
+    seed=42
   )
   data_collator = CustomDataCollator(tokenizer)
   trainer = Trainer(
