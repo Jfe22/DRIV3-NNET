@@ -27,7 +27,7 @@ class CustomDataCollator(DataCollatorWithPadding):
       }
     
 def train_driving(dataset, new_model_name, epochs):
-  train_dataset, eval_dataset = get_tensors('../dataset/' + dataset)
+  train_dataset, eval_dataset = get_tensors('../dataset/datasets_for_training/' + dataset)
   tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
   model = BertForSequenceClassification.from_pretrained('bert-base-uncased', num_labels=3)
 
