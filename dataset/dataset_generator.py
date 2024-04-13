@@ -12,9 +12,9 @@ def parse_sensor_data(window):
   gyroX = []
   gyroY = []
   gyroZ = []
-
-  for i in range(len(window['sensor_data'])):
-    row = window['sensor_data'][i].split("/")
+    
+  for i in window['sensor_data']:
+    row = i.split("/")
     accX.append(float(row[0].replace('$$$', '')))
     accY.append(float(row[1]))
     accZ.append(float(row[2]))
@@ -23,7 +23,6 @@ def parse_sensor_data(window):
     gyroZ.append(float(row[5]))
 
   return accX, accY, accZ, gyroX, gyroY, gyroZ
-
 
 def set_label(window):
   accX, accY, accZ, gyroX, gyroY, gyroZ = parse_sensor_data(window)
@@ -46,7 +45,6 @@ def set_label(window):
   if (driving_variance < 0.3): label = 'Slow'
   if (driving_variance >= 0.3 and driving_variance < 0.6): label = 'Normal'
   if (driving_variance >= 0.6): label = 'Aggresive'
-
   return label 
 
 def concatenate_dataset(df, window_size, increment, concatenated_rows):
@@ -55,9 +53,8 @@ def concatenate_dataset(df, window_size, increment, concatenated_rows):
     if (DEBUG): print("window: " + window) 
     
     concatenated_sensor_data = ' '.join(map(str, window['sensor_data']))
-    label = window.iloc[0]['label'] 
-    #uncoment and replace the above line when function is ready 
-    #label = set_label(window)
+    #label = window.iloc[0]['label'] 
+    label = set_label(window)
 
     concatenated_rows.append({'sensor_data': concatenated_sensor_data, 'label': label})
     if (DEBUG): print("sensor data: " + concatenated_sensor_data) 
@@ -77,5 +74,5 @@ for i in range(1, 11):
   concatenate_dataset(df, window_size, increment, concatenated_rows)
 
 concatenated_df = pd.DataFrame(concatenated_rows) 
-concatenated_df.to_csv('datasets_for_training/1sec_timeframe_dataset.csv', index=False)
-#concatenated_df.to_csv('datasets_for_training/auto_label_test1.csv', index=False)
+#concatenated_df.to_csv('datasets_for_training/1sec_timeframe_dataset.csv', index=False)
+concatenated_df.to_csv('datasets_for_training/auto_label_test1.csv', index=False)
