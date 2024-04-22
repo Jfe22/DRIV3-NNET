@@ -44,7 +44,7 @@ def set_label(window):
 
   if (driving_variance < 0.3): label = 'Slow'
   if (driving_variance >= 0.3 and driving_variance < 0.6): label = 'Normal'
-  if (driving_variance >= 0.6): label = 'Aggresive'
+  if (driving_variance >= 0.6): label = 'Aggressive'
   return label 
 
 def concatenate_dataset(df, window_size, increment, concatenated_rows):
