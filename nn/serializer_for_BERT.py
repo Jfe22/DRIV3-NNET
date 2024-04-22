@@ -9,7 +9,7 @@ def get_tensors(dataset_path):
   texts = train_df['sensor_data'].tolist()
   labels = train_df['label'].tolist()
 
-  train_texts, train_labels, eval_texts, eval_labels = train_test_split(texts, labels, test_size=0.1, random_state=42)
+  train_texts, eval_texts, train_labels, eval_labels = train_test_split(texts, labels, test_size=0.1, random_state=42)
 
   tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
   train_encodings = tokenizer(train_texts, truncation=True, padding=True)
@@ -30,6 +30,4 @@ def get_tensors(dataset_path):
     torch.tensor(eval_labels_int, dtype=torch.long) 
   )
 
-  print ("Train dataset size:", len(train_dataset))
-  print ("Eval dataset size:", len(eval_dataset))
   return train_dataset, eval_dataset
