@@ -14,8 +14,11 @@ def parse_sensor_data(window):
   gyroY = []
   gyroZ = []
 
+  print (f'window: {window}')
+
   for i in window:
     row = i.split("/")
+    print (f'row: {row}')
     accX.append(float(row[0].replace('$$$', '')))
     accY.append(float(row[1]))
     accZ.append(float(row[2]))
@@ -70,6 +73,51 @@ def extra_data(window):
 
   return concatenated_data_final, label
 
+def balance_dataset(df):
+
+  #TODO isto estava a funcar bem para quando estava a passar a lista
+  # em vez do dataframe, no entanto para a ultima parte da concatenacoa
+  # funcionar tem de ser passado o dataframe, 
+  # ja o estou a fazer, mas os prints dao bugs agora,
+  # é meter uns prints aqui em cima ver o que se esta a passar e seguir
+
+  aggressive_count = 0
+  normal_count = 0
+  slow_count = 0
+
+  for i, row in df.iterrows():
+    if (row['label'] == 'Aggressive'): aggressive_count += 1
+    if (row['label'] == 'Normal'): normal_count += 1
+    if (row['label'] == 'Slow'): slow_count += 1
+
+
+  print (f'Aggressive: {aggressive_count}')
+  print (f'Normal: {normal_count}')
+  print (f'Slow: {slow_count}')
+
+  agg_missing = normal_count - aggressive_count
+  slow_missing = normal_count - slow_count
+
+  print (f'aggresive missising: {agg_missing}')
+  print (f'slow missising: {slow_missing}')
+
+  while (agg_missing > 0):
+    for i, row in df.iterrows():
+      if (row['label'] == 'Aggressive'): 
+        print(row['sensor_data'])
+        new_aug_data, label = extra_data(row['sensor_data'])
+        concatenated_sensor_data = ' '.join(map(str, new_aug_data['sensor_data']))
+        concatenated_rows.append({'sensor_data': concatenated_sensor_data, 'label': label})
+        agg_missing -= 1
+
+
+
+  print (f'Aggressive: {aggressive_count}')
+  print (f'Normal: {normal_count}')
+  print (f'Slow: {slow_count}')
+
+ 
+
 def concatenate_dataset(df, window_size, increment, concatenated_rows):
   for i in range(len(df) - window_size + increment):
     window = df.iloc[i:i + window_size]
@@ -80,14 +128,14 @@ def concatenate_dataset(df, window_size, increment, concatenated_rows):
 
     concatenated_rows.append({'sensor_data': concatenated_sensor_data, 'label': label})
     if (DEBUG): print("sensor data: " + concatenated_sensor_data) 
-    if (not DEBUG): print(f'concated rows: {concatenated_rows}')
+    if (DEBUG): print(f'concated rows: {concatenated_rows}')
 
     #data augmentation - x2
     dataaug1_sensor_data, dataaug1_label = extra_data(window['sensor_data'])
     dataaug1_concatenated_sensor_data = ' '.join(map(str, dataaug1_sensor_data['sensor_data']))
 
     concatenated_rows.append({'sensor_data': dataaug1_concatenated_sensor_data, 'label': dataaug1_label})
-    if (not DEBUG): print(f'concated rows: {concatenated_rows}')
+    if (DEBUG): print(f'concated rows: {concatenated_rows}')
 
 for i in range(1, 11):
   df = pd.read_csv(f"datasets_for_pandas/dataset_agg{i}.csv")
@@ -102,5 +150,9 @@ for i in range(1, 11):
   if (DEBUG): print(f'dataframe slow{i}: {df}')
   concatenate_dataset(df, window_size, increment, concatenated_rows)
 
+#balance_dataset(concatenated_rows)
 concatenated_df = pd.DataFrame(concatenated_rows) 
+balance_dataset(concatenated_df)
+
+exit()
 concatenated_df.to_csv('datasets_for_training/auto_label_data_augmented_1.csv', index=False)
