@@ -97,13 +97,6 @@ def extra_data(window):
   return concatenated_data_final, label
 
 def balance_dataset(df):
-
-  #TODO isto estava a funcar bem para quando estava a passar a lista
-  # em vez do dataframe, no entanto para a ultima parte da concatenacoa
-  # funcionar tem de ser passado o dataframe, 
-  # ja o estou a fazer, mas os prints dao bugs agora,
-  # é meter uns prints aqui em cima ver o que se esta a passar e seguir
-
   aggressive_count = 0
   normal_count = 0
   slow_count = 0
@@ -113,53 +106,34 @@ def balance_dataset(df):
     if (row['label'] == 'Normal'): normal_count += 1
     if (row['label'] == 'Slow'): slow_count += 1
 
-
-  print (f'Aggressive: {aggressive_count}')
-  print (f'Normal: {normal_count}')
-  print (f'Slow: {slow_count}')
-
+  #WE ALWAYS HAVE MORE NORMAL VALUES
   agg_missing = normal_count - aggressive_count
   slow_missing = normal_count - slow_count
-
-  print (f'aggresive missising: {agg_missing}')
-  print (f'slow missising: {slow_missing}')
 
   while (agg_missing > 0):
     for i, row in df.iterrows():
       if (row['label'] == 'Aggressive'): 
-        print(row['sensor_data'])
-        print(f'row: {row}')
-        #Bug ta aqui em baixo, temos so uma string, e para criar a data precisamos de um
-        #dataframe, mas em vez de tarmos a tentar criar o data frame aqui, podemos dar
-        #parse da string, e criar window e isso cria automaticamente o data frame
-
-        #new_data_window = create_window(parse_sensor_data(row['sensor_data']))
         accX, accY, accZ, gyroX, gyroY, gyroZ = parse_sensor_data_from_string(row['sensor_data'])
         new_data_window = create_window(accX, accY, accZ, gyroX, gyroY, gyroZ)
-        #new_data_window = create_window(parse_sensor_data_from_string(row['sensor_data']))
         new_data_df = pd.DataFrame({'sensor_data': new_data_window})
 
-        #new_data_df = pd.DataFrame({'sensor_data': row['sensor_data']})
         new_agg_data, label = extra_data(new_data_df['sensor_data'])
-        #new_aug_data, label = extra_data(row['sensor_data'])
         concatenated_sensor_data = ' '.join(map(str, new_agg_data['sensor_data']))
         concatenated_rows.append({'sensor_data': concatenated_sensor_data, 'label': label})
         agg_missing -= 1
+  
+  while (slow_missing > 0):
+    for i, row in df.iterrows():
+      if (row['label'] == 'Slow'): 
+        accX, accY, accZ, gyroX, gyroY, gyroZ = parse_sensor_data_from_string(row['sensor_data'])
+        new_data_window = create_window(accX, accY, accZ, gyroX, gyroY, gyroZ)
+        new_data_df = pd.DataFrame({'sensor_data': new_data_window})
 
-  aggressive_count = 0
-  normal_count = 0
-  slow_count = 0
+        new_slow_data, label = extra_data(new_data_df['sensor_data'])
+        concatenated_sensor_data = ' '.join(map(str, new_slow_data['sensor_data']))
+        concatenated_rows.append({'sensor_data': concatenated_sensor_data, 'label': label})
+        slow_missing -= 1
 
-  for i, row in df.iterrows():
-    if (row['label'] == 'Aggressive'): aggressive_count += 1
-    if (row['label'] == 'Normal'): normal_count += 1
-    if (row['label'] == 'Slow'): slow_count += 1
-
-  print (f'Aggressive: {aggressive_count}')
-  print (f'Normal: {normal_count}')
-  print (f'Slow: {slow_count}')
-
- 
 
 def concatenate_dataset(df, window_size, increment, concatenated_rows):
   for i in range(len(df) - window_size + increment):
