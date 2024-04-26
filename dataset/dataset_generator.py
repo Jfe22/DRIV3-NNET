@@ -14,11 +14,11 @@ def parse_sensor_data(window):
   gyroY = []
   gyroZ = []
 
-  print (f'window: {window}')
+  if DEBUG: print (f'window: {window}')
 
   for i in window:
     row = i.split("/")
-    print (f'row: {row}')
+    if DEBUG: print (f'row: {row}')
     accX.append(float(row[0].replace('$$$', '')))
     accY.append(float(row[1]))
     accZ.append(float(row[2]))
@@ -27,6 +27,29 @@ def parse_sensor_data(window):
     gyroZ.append(float(row[5]))
 
   return accX, accY, accZ, gyroX, gyroY, gyroZ
+
+
+def parse_sensor_data_from_string(string):
+  accX = []
+  accY = []
+  accZ = []
+  gyroX = []
+  gyroY = []
+  gyroZ = []
+  
+  window = string.split(" ")
+  for i in window:
+    row = i.split("/")
+    accX.append(float(row[0].replace('$$$', '')))
+    accY.append(float(row[1]))
+    accZ.append(float(row[2]))
+    gyroX.append(float(row[3]))
+    gyroY.append(float(row[4]))
+    gyroZ.append(float(row[5]))
+
+  return accX, accY, accZ, gyroX, gyroY, gyroZ
+
+
 
 def set_label(window):
   accX, accY, accZ, gyroX, gyroY, gyroZ = parse_sensor_data(window)
@@ -105,12 +128,32 @@ def balance_dataset(df):
     for i, row in df.iterrows():
       if (row['label'] == 'Aggressive'): 
         print(row['sensor_data'])
-        new_aug_data, label = extra_data(row['sensor_data'])
-        concatenated_sensor_data = ' '.join(map(str, new_aug_data['sensor_data']))
+        print(f'row: {row}')
+        #Bug ta aqui em baixo, temos so uma string, e para criar a data precisamos de um
+        #dataframe, mas em vez de tarmos a tentar criar o data frame aqui, podemos dar
+        #parse da string, e criar window e isso cria automaticamente o data frame
+
+        #new_data_window = create_window(parse_sensor_data(row['sensor_data']))
+        accX, accY, accZ, gyroX, gyroY, gyroZ = parse_sensor_data_from_string(row['sensor_data'])
+        new_data_window = create_window(accX, accY, accZ, gyroX, gyroY, gyroZ)
+        #new_data_window = create_window(parse_sensor_data_from_string(row['sensor_data']))
+        new_data_df = pd.DataFrame({'sensor_data': new_data_window})
+
+        #new_data_df = pd.DataFrame({'sensor_data': row['sensor_data']})
+        new_agg_data, label = extra_data(new_data_df['sensor_data'])
+        #new_aug_data, label = extra_data(row['sensor_data'])
+        concatenated_sensor_data = ' '.join(map(str, new_agg_data['sensor_data']))
         concatenated_rows.append({'sensor_data': concatenated_sensor_data, 'label': label})
         agg_missing -= 1
 
+  aggressive_count = 0
+  normal_count = 0
+  slow_count = 0
 
+  for i, row in df.iterrows():
+    if (row['label'] == 'Aggressive'): aggressive_count += 1
+    if (row['label'] == 'Normal'): normal_count += 1
+    if (row['label'] == 'Slow'): slow_count += 1
 
   print (f'Aggressive: {aggressive_count}')
   print (f'Normal: {normal_count}')
@@ -121,38 +164,39 @@ def balance_dataset(df):
 def concatenate_dataset(df, window_size, increment, concatenated_rows):
   for i in range(len(df) - window_size + increment):
     window = df.iloc[i:i + window_size]
-    if (DEBUG): print("window: " + window) 
+    if DEBUG: print("window: " + window) 
     
     concatenated_sensor_data = ' '.join(map(str, window['sensor_data']))
     label = set_label(window['sensor_data'])
 
     concatenated_rows.append({'sensor_data': concatenated_sensor_data, 'label': label})
-    if (DEBUG): print("sensor data: " + concatenated_sensor_data) 
-    if (DEBUG): print(f'concated rows: {concatenated_rows}')
+    if DEBUG: print("sensor data: " + concatenated_sensor_data) 
+    if DEBUG: print(f'concated rows: {concatenated_rows}')
 
     #data augmentation - x2
     dataaug1_sensor_data, dataaug1_label = extra_data(window['sensor_data'])
     dataaug1_concatenated_sensor_data = ' '.join(map(str, dataaug1_sensor_data['sensor_data']))
 
     concatenated_rows.append({'sensor_data': dataaug1_concatenated_sensor_data, 'label': dataaug1_label})
-    if (DEBUG): print(f'concated rows: {concatenated_rows}')
+    if DEBUG: print(f'concated rows: {concatenated_rows}')
 
 for i in range(1, 11):
   df = pd.read_csv(f"datasets_for_pandas/dataset_agg{i}.csv")
-  if (DEBUG): print(f'dataframe agg{i}: {df}')
+  if DEBUG: print(f'dataframe agg{i}: {df}')
   concatenate_dataset(df, window_size, increment, concatenated_rows)
 
   df = pd.read_csv(f"datasets_for_pandas/dataset_normal{i}.csv")
-  if (DEBUG): print(f'dataframe normal{i}: {df}')
+  if DEBUG: print(f'dataframe normal{i}: {df}')
   concatenate_dataset(df, window_size, increment, concatenated_rows)
 
   df = pd.read_csv(f"datasets_for_pandas/dataset_slow{i}.csv")
-  if (DEBUG): print(f'dataframe slow{i}: {df}')
+  if DEBUG: print(f'dataframe slow{i}: {df}')
   concatenate_dataset(df, window_size, increment, concatenated_rows)
 
 #balance_dataset(concatenated_rows)
 concatenated_df = pd.DataFrame(concatenated_rows) 
 balance_dataset(concatenated_df)
+concatenated_balanced_df = pd.DataFrame(concatenated_rows)
 
-exit()
-concatenated_df.to_csv('datasets_for_training/auto_label_data_augmented_1.csv', index=False)
+#concatenated_df.to_csv('datasets_for_training/auto_label_data_augmented_2.csv', index=False)
+concatenated_balanced_df.to_csv('datasets_for_training/auto_label_data_augmented_2.csv', index=False)
