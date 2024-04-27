@@ -14,8 +14,6 @@ def parse_sensor_data(window):
   gyroY = []
   gyroZ = []
 
-  if DEBUG: print (f'window: {window}')
-
   for i in window:
     row = i.split("/")
     if DEBUG: print (f'row: {row}')
@@ -27,7 +25,6 @@ def parse_sensor_data(window):
     gyroZ.append(float(row[5]))
 
   return accX, accY, accZ, gyroX, gyroY, gyroZ
-
 
 def parse_sensor_data_from_string(string):
   accX = []
@@ -48,8 +45,6 @@ def parse_sensor_data_from_string(string):
     gyroZ.append(float(row[5]))
 
   return accX, accY, accZ, gyroX, gyroY, gyroZ
-
-
 
 def set_label(window):
   accX, accY, accZ, gyroX, gyroY, gyroZ = parse_sensor_data(window)
@@ -106,7 +101,6 @@ def balance_dataset(df):
     if (row['label'] == 'Normal'): normal_count += 1
     if (row['label'] == 'Slow'): slow_count += 1
 
-  #WE ALWAYS HAVE MORE NORMAL VALUES
   agg_missing = normal_count - aggressive_count
   slow_missing = normal_count - slow_count
 
@@ -167,7 +161,6 @@ for i in range(1, 11):
   if DEBUG: print(f'dataframe slow{i}: {df}')
   concatenate_dataset(df, window_size, increment, concatenated_rows)
 
-#balance_dataset(concatenated_rows)
 concatenated_df = pd.DataFrame(concatenated_rows) 
 balance_dataset(concatenated_df)
 concatenated_balanced_df = pd.DataFrame(concatenated_rows)
