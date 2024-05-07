@@ -22,6 +22,7 @@ def get_arrays(window):
 
   return arrayAccX, arrayAccY, arrayAccZ, arrayGyroX, arrayGyroY, arrayGyroZ, label 
 
+#Use with normalized data
 def set_label_mean(accY):
   nVals = 0
   sumAccY = 0
@@ -34,21 +35,20 @@ def set_label_mean(accY):
   if (meanAccY > 0.8): return "Aggressive"
   return "Normal"
 
+#Use with normalized data
 def set_label_variance(accY):
   varAccY = max(accY) - min(accY)
 
   if (varAccY > 0.8): return "Aggressive"
   return "Normal"
 
-def set_sum(accX, accY, accZ):
+#Use with non-normalized data
+def set_label_sum(accX, accY, accZ):
   sumAcc = 0
   sumAcc += sum(accX)
   sumAcc += sum(accY)
   sumAcc += sum(accZ)
   ## PARA DAR SET DA LABEL, VALOR DE 4.3 SABEMOS A PRIORI QUE PODE SER USADO COMO TRESHOLD
-  return sumAcc
-
-def set_label_sum(sumAcc):
   if (sumAcc > 4.3): return "Aggressive"
   return "Normal"
 
@@ -57,7 +57,7 @@ def get_windows(data):
   for i in range(len(data) - window_size + increment):
     window = data[i:i+window_size]
     accX, accY, accZ, gyroX, gyroY, gyroZ, label = get_arrays(window)
-    label = set_label_sum(set_sum(accX, accY, accZ))
+    label = set_label_sum(accX, accY, accZ)
 
     new_row = pd.DataFrame({'accelerometerXAxis': [accX], 
                             'accelerometerYAxis': [accY],  
@@ -69,6 +69,7 @@ def get_windows(data):
     concatenated_4instarray_dataset = pd.concat([concatenated_4instarray_dataset, new_row], ignore_index=True)
 
     if DEBUG: print(concatenated_4instarray_dataset)
+    if DEBUG: print(type(concatenated_4instarray_dataset))
   return concatenated_4instarray_dataset 
 
 def read_normalized_data():
@@ -85,7 +86,8 @@ def read_normalized_data():
     if DEBUG: print(f'dataframe slow{i}: {df}')
     concatenated_normalized_dataset.append(df)
 
-  return concatenated_normalized_dataset
+  dataframe = pd.concat(concatenated_normalized_dataset)
+  return dataframe 
 
 def read_non_normalized_data():
   for i in range(1, 11):
@@ -98,32 +100,27 @@ def read_non_normalized_data():
     f = pd.read_csv(f"datasets_for_pandas/tt_dataset_slow{i}_non_normalized.csv")
     concatenated_raw_dataset.append(df)
 
-    dataframe = pd.concat(concatenated_raw_dataset)
+  dataframe = pd.concat(concatenated_raw_dataset)
   return dataframe 
-
-
-## Isto nunca vai funcionar desta forma pq os dados do dataset estao em lista
-## logo nao vamos conseguir normalizar por aqui,
-## talvez voltar a ler os dadasets normalizados, e adicionar so as labels que sabemos
-## que vao corresponder ao que esta no que nao esta normalizado
-
-def normalize_data(data):
-  return (data - data.min()) / (data.max() - data.min())
 
 def create_sum_labeled_dataset():
   concatenated_raw_dataset = read_non_normalized_data()
   windowed_raw_dataset = get_windows(concatenated_raw_dataset)
-  print(windowed_raw_dataset)
-  windowed_raw_dataset = normalize_data(windowed_raw_dataset)
-  print(windowed_raw_dataset)
- # windowed_raw_dataset.to_csv('datasets_for_training/tt_final_labels_from_accsum_post_norm.csv', index=False)
+  return windowed_raw_dataset
 
-create_sum_labeled_dataset()
+def normalize_dataset(non_norm_data):
+  norm_data = get_windows(read_normalized_data())
+  norm_data['label'] = non_norm_data['label']
+  return norm_data
 
-# convert from list to dataframe
-#concatenated_normalized_dataset = pd.concat(concatenated_normalized_dataset)
+non_norm_dataframe = create_sum_labeled_dataset()
+norm_final_dataframe = normalize_dataset(non_norm_dataframe)
+norm_final_dataframe.to_csv('datasets_for_training/tt_final_labels_from_accsum_post_norm.csv', index=False)
 
-#concatenated_handled_dataset = get_windows(concatenated_normalized_dataset)
-#print(concatenated_handled_dataset)
 
-#concatenated_handled_dataset.to_csv('datasets_for_training/tt_auto_labeled_variance_arrays_dataset.csv', index=False)
+# GENERATE THESE DATASETS TO COMPARE WITH THE FINAL DATASET
+#norm_without_c_labels = get_windows(read_normalized_data())
+#not_norm_with_c_labels = get_windows(read_non_normalized_data())
+#norm_without_c_labels.to_csv('datasets_for_training/tt_final_norm_without_c_labels.csv', index=False)
+#not_norm_with_c_labels.to_csv('datasets_for_training/tt_final_not_norm_with_c_labels.csv', index=False)
+
