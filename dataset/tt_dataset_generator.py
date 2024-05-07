@@ -100,14 +100,25 @@ def read_non_normalized_data():
 
     dataframe = pd.concat(concatenated_raw_dataset)
   return dataframe 
-    
 
 
-concatenated_raw_dataset = read_non_normalized_data()
-windowed_raw_dataset = get_windows(concatenated_raw_dataset)
-print(windowed_raw_dataset)
-windowed_raw_dataset.to_csv('datasets_for_training/tt_final_labels_from_accsum.csv', index=False)
+## Isto nunca vai funcionar desta forma pq os dados do dataset estao em lista
+## logo nao vamos conseguir normalizar por aqui,
+## talvez voltar a ler os dadasets normalizados, e adicionar so as labels que sabemos
+## que vao corresponder ao que esta no que nao esta normalizado
 
+def normalize_data(data):
+  return (data - data.min()) / (data.max() - data.min())
+
+def create_sum_labeled_dataset():
+  concatenated_raw_dataset = read_non_normalized_data()
+  windowed_raw_dataset = get_windows(concatenated_raw_dataset)
+  print(windowed_raw_dataset)
+  windowed_raw_dataset = normalize_data(windowed_raw_dataset)
+  print(windowed_raw_dataset)
+ # windowed_raw_dataset.to_csv('datasets_for_training/tt_final_labels_from_accsum_post_norm.csv', index=False)
+
+create_sum_labeled_dataset()
 
 # convert from list to dataframe
 #concatenated_normalized_dataset = pd.concat(concatenated_normalized_dataset)
