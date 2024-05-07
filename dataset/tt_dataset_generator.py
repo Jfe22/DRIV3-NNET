@@ -3,6 +3,7 @@ import random
 
 DEBUG = 0
 concatenated_rows = []
+concatenated_normalized_dataset = []
 concatenated_raw_dataset = []
 variance_dataset = []
 window_size = 4
@@ -39,39 +40,79 @@ def set_label_variance(accY):
   if (varAccY > 0.8): return "Aggressive"
   return "Normal"
 
+def set_sum(accX, accY, accZ):
+  sumAcc = 0
+  sumAcc += sum(accX)
+  sumAcc += sum(accY)
+  sumAcc += sum(accZ)
+  ## PARA DAR SET DA LABEL, VALOR DE 4.3 SABEMOS A PRIORI QUE PODE SER USADO COMO TRESHOLD
+  return sumAcc
+
+def set_label_sum(sumAcc):
+  if (sumAcc > 4.3): return "Aggressive"
+  return "Normal"
+
 def get_windows(data):
   concatenated_4instarray_dataset = pd.DataFrame() 
   for i in range(len(data) - window_size + increment):
     window = data[i:i+window_size]
     accX, accY, accZ, gyroX, gyroY, gyroZ, label = get_arrays(window)
-    label = set_label_variance(accY)
+    label = set_label_sum(set_sum(accX, accY, accZ))
 
-    new_row = pd.DataFrame({'accelerometerXAxis': [accX], 'accelerometerYAxis': [accY],  'accelerometerZAxis': [accZ],
-                            'gyroscopeXAxis': [gyroX], 'gyroscopeYAxis': [gyroY], 'gyroscopeZAxis': [gyroZ], 
+    new_row = pd.DataFrame({'accelerometerXAxis': [accX], 
+                            'accelerometerYAxis': [accY],  
+                            'accelerometerZAxis': [accZ],
+                            'gyroscopeXAxis': [gyroX], 
+                            'gyroscopeYAxis': [gyroY], 
+                            'gyroscopeZAxis': [gyroZ], 
                             'label': [label]}, index=[0])
     concatenated_4instarray_dataset = pd.concat([concatenated_4instarray_dataset, new_row], ignore_index=True)
 
     if DEBUG: print(concatenated_4instarray_dataset)
   return concatenated_4instarray_dataset 
 
-# Read all data files and concat them
-for i in range(1, 11):
-  df = pd.read_csv(f"datasets_for_pandas/tt_dataset_agg{i}.csv")
-  if DEBUG: print(f'dataframe agg{i}: {df}')
-  concatenated_raw_dataset.append(df)
+def read_normalized_data():
+  for i in range(1, 11):
+    df = pd.read_csv(f"datasets_for_pandas/tt_dataset_agg{i}.csv")
+    if DEBUG: print(f'dataframe agg{i}: {df}')
+    concatenated_normalized_dataset.append(df)
 
-  df = pd.read_csv(f"datasets_for_pandas/tt_dataset_normal{i}.csv")
-  if DEBUG: print(f'dataframe normal{i}: {df}')
-  concatenated_raw_dataset.append(df)
+    df = pd.read_csv(f"datasets_for_pandas/tt_dataset_normal{i}.csv")
+    if DEBUG: print(f'dataframe normal{i}: {df}')
+    concatenated_normalized_dataset.append(df)
 
-  f = pd.read_csv(f"datasets_for_pandas/tt_dataset_slow{i}.csv")
-  if DEBUG: print(f'dataframe slow{i}: {df}')
-  concatenated_raw_dataset.append(df)
+    f = pd.read_csv(f"datasets_for_pandas/tt_dataset_slow{i}.csv")
+    if DEBUG: print(f'dataframe slow{i}: {df}')
+    concatenated_normalized_dataset.append(df)
 
-# raw dataset concatenated
-concatenated_raw_dataset = pd.concat(concatenated_raw_dataset)
+  return concatenated_normalized_dataset
 
-concatenated_handled_dataset = get_windows(concatenated_raw_dataset)
-print(concatenated_handled_dataset)
+def read_non_normalized_data():
+  for i in range(1, 11):
+    df = pd.read_csv(f"datasets_for_pandas/tt_dataset_agg{i}_non_normalized.csv")
+    concatenated_raw_dataset.append(df)
 
-concatenated_handled_dataset.to_csv('datasets_for_training/tt_auto_labeled_variance_arrays_dataset.csv', index=False)
+    df = pd.read_csv(f"datasets_for_pandas/tt_dataset_normal{i}_non_normalized.csv")
+    concatenated_raw_dataset.append(df)
+
+    f = pd.read_csv(f"datasets_for_pandas/tt_dataset_slow{i}_non_normalized.csv")
+    concatenated_raw_dataset.append(df)
+
+    dataframe = pd.concat(concatenated_raw_dataset)
+  return dataframe 
+    
+
+
+concatenated_raw_dataset = read_non_normalized_data()
+windowed_raw_dataset = get_windows(concatenated_raw_dataset)
+print(windowed_raw_dataset)
+windowed_raw_dataset.to_csv('datasets_for_training/tt_final_labels_from_accsum.csv', index=False)
+
+
+# convert from list to dataframe
+#concatenated_normalized_dataset = pd.concat(concatenated_normalized_dataset)
+
+#concatenated_handled_dataset = get_windows(concatenated_normalized_dataset)
+#print(concatenated_handled_dataset)
+
+#concatenated_handled_dataset.to_csv('datasets_for_training/tt_auto_labeled_variance_arrays_dataset.csv', index=False)
