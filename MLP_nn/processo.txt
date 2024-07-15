@@ -1,0 +1,64 @@
+Descricao dos dados
+  - Aceleracao vem de 3 sensores que medem a aceleracao em 3 eixos (X, Y e Z)
+    a aceleracao e util para medir aceleracoes e/ou travagens bruscas  
+  - Para medir oscilacoes do carro, foram usado 3 sensores de giroescopio (X, Y e Z)
+    o giroescopio pode ser util para estudar os movimentos do carro em curvas, pois quando o carro curva,
+    a suspensao desce e o carro "roda" sobre ele proprio
+  - Temos tambem um sensor que mede a longitude e outro que mede a latitude, de modo a podermos registar o 
+    local geografico onde foram realizadas manobras
+  - Todos os dados dos sensores vem inicialmente desnormalizados e com 9 casas decimais 
+
+
+Tratamento dos dados 
+  - Para tratar os dados, a primeira transformacao realizada, for organizar os valores dos sensores em manobras,
+    de modo a realizar esta transformacao foi criada a funcao separate_positives_negatives(), que vai separar os valores
+    do sensor entre positivos e negativos, e com base nessa divisao conseguimos saber se o carro esta a 
+    acelerar/travar (no exemplo do sensor accY), se o carro esta a curvar para a esquerda ou para a direita
+    (no sensor accX) etc...
+
+
+Classificacao dos dados
+  - Para se fazer a classificacao dos dados foi usada a funcao y_classification(data, threshold) que vai 
+    criar uma matriz com o mesmo formato dos dados iniciais mas apenas com 0s, esta funcao vai receber 
+    nao so os dados como a threshold, e de seguida vai iterar sobre todas as colunas do dadaset para ver
+    quais estao acima da threshold, e regista na nova matriz o valor 1 na posicao correspondente a posicao
+    dos dados que foram testados na matriz original.
+    Estes valores de classificacao 0 e 1 correspondem a uma conducao agressiva (1) e uma conducao nao agressiva (0)
+
+Normalizacao dos dados
+  - Para normalizar os dados foi criadas duas funcoes, max_of_vectors() e normalize_between_0_and_max_v2() 
+    max_of_vectors() vai receber todas as features resultantes do acelerometro (em x, y e z, positivos ou negativos), e vai calcular o maximo.
+    vamos usar esta funcao 2 v3zes ua para ver o maximo das features do acelerometro e outra para ver o maximo das features do giroescopio
+    e a funcao normalize_between_0_and_max, vai simplemente dividir o valor dos dados recebidos por o valor maximo encontrado com max_of_vectors()
+    esta normalizacao é uma normalizacao do tipo min/max e vai mapear todo os valores dos dados entre 0 e 1
+
+
+Apresentacao das manabras no google maps:
+  - Para mostrar as manobras no goole maps vamos usar os valores dos sensores de longitude e altitude.
+    para tal foi criada a funcao save_manovers_positions_to_csv_file(gps_positions, manovers, filename), que recebe, um array com as posicoes do gps, outro 
+    com as manobras e por ultimo um filename onde vai guardar a info das manobras.
+    a funcao comeca por criar um array com todos os valores a 0, vai iterar sobre o array de manobras ate encontrar uma manobra com o valor a 1 (quer dizer que esta manobra aconteceu), e quando encontra
+    essa manobra, vai meter o valor dos sensores de gps no indice correspondente.
+
+
+Separacao dos dados de treino/teste:
+  - para separar os dados de treino dos dados de teste foi criada a funcao split_train_test(data, test_size=0.2)
+    esta funcao vai receber a data e o tamnaho (entre 0 e 1) dos dados de teste.
+    e de seguida usamos calculamos o numero de amostras de treino com base no test_size e o numero de amostras de teste com base no numero de amostras de treino
+    e depois simplesmente dividimos o array com data ate ao numero de amostras de treino, e o resto do array para as amostras de teste.
+
+
+criacao do modelo:
+  - Para criar o modelo foi usado um MLP com 3 camadas densas escondidas (todas com funcao de ativacao relu, menos a ultima que tem linear
+  e uma camada de output com 12 neuronios de saida e com funcao ativacao sigmoid
+  foi usada como funcao de loss MSE e como otimizador o "adam"
+
+Compilacao e treino
+  - Para compilar o modelo foi usada como funcao de loss MSE e como otimizador o adam
+    no treino do modelo foram usadas 10 epochs com um batch size de 4, nao foi feito shuffle dos dados, e como dados de validacao
+    do treino, foi usado o conjunto de teste
+
+Resultados:
+  A rede obteve resultados exelentes obtende uma accuracy de 100%(??? confirmar ???) e uma loss muito proxima de 0 (0.013 para a loss de 
+  teste)
+    

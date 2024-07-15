@@ -35,29 +35,38 @@ def set_label_mean(accY):
   if (meanAccY > 0.8): return "Aggressive"
   return "Normal"
 
-#Use with normalized data
+# Use with normalized data
 def set_label_variance(accY):
   varAccY = max(accY) - min(accY)
 
   if (varAccY > 0.8): return "Aggressive"
   return "Normal"
 
-#Use with non-normalized data
-def set_label_sum(accX, accY, accZ):
+def get_sum(accX, accY, accZ):
   sumAcc = 0
   sumAcc += sum(accX)
   sumAcc += sum(accY)
   sumAcc += sum(accZ)
-  ## PARA DAR SET DA LABEL, VALOR DE 4.3 SABEMOS A PRIORI QUE PODE SER USADO COMO TRESHOLD
-  if (sumAcc > 4.3): return "Aggressive"
+  return sumAcc
+
+# Use with non-normalized data
+def set_label_sum(sum):
+  # SABEMOS A PRIORI QUE VALOR DE 4.3 PODE SER USADO COMO TRESHOLD
+  if (sum > 4.3): return "Aggressive"
   return "Normal"
+
+def get_driving_type(sum):
+  if (sum > 0): return "Accelerating"
+  return "Braking"
 
 def get_windows(data, window_type):
   concatenated_4instarray_dataset = pd.DataFrame() 
   for i in range(len(data) - window_size + increment):
     window = data[i:i+window_size]
     accX, accY, accZ, gyroX, gyroY, gyroZ, label = get_arrays(window)
-    label = set_label_sum(accX, accY, accZ)
+    sumAcc = get_sum(accX, accY, accZ)
+    driving_type = get_driving_type(sumAcc)
+    label = set_label_sum(sumAcc)
 
     if window_type == 'array':
       new_row = pd.DataFrame({'accelerometerXAxis': [accX], 
@@ -66,6 +75,8 @@ def get_windows(data, window_type):
                               'gyroscopeXAxis': [gyroX], 
                               'gyroscopeYAxis': [gyroY], 
                               'gyroscopeZAxis': [gyroZ], 
+                              'drivingType': [driving_type], 
+                              'weightSum': [sumAcc],
                               'label': [label]}, index=[0])
     elif window_type == 'sum':
       new_row = pd.DataFrame({'accelerometerXAxis': [sum(accX)], 
@@ -74,6 +85,8 @@ def get_windows(data, window_type):
                               'gyroscopeXAxis': [sum(gyroX)], 
                               'gyroscopeYAxis': [sum(gyroY)], 
                               'gyroscopeZAxis': [sum(gyroZ)], 
+                              'drivingType': [driving_type], 
+                              'weightSum': [sumAcc],
                               'label': [label]}, index=[0])
     else:
       print("Invalid window type")
@@ -152,11 +165,11 @@ def create_sum_label_sum_att_dataset():
 # attributes: sum of non-normalized sensor data for the 4 instances of time (normalized post sum)
 def create_sum_label_sum_att_normalized_dataset():
   non_norm_dataframe = create_sum_labeled_dataset("sum")
-  non_label_columns = [col for col in non_norm_dataframe.columns if col != 'label']
+  non_label_columns = [col for col in non_norm_dataframe.columns if col != 'label' and col != 'weightSum' and col != 'drivingType']
   norm_dataframe = non_norm_dataframe.copy()
   # Min max normalization
   norm_dataframe[non_label_columns] = (norm_dataframe[non_label_columns] - norm_dataframe[non_label_columns].min()) / (norm_dataframe[non_label_columns].max() - norm_dataframe[non_label_columns].min())
-  norm_dataframe.to_csv('datasets_for_training/tt_final_labels_from_accsum_with_att_accsum_normalized.csv', index=False)
+  norm_dataframe.to_csv('datasets_for_training/tt_final_labels_with_cat_feature_weight_column_from_accsum_with_att_accsum_normalized.csv', index=False)
 
 #create_sum_label_array_att_dataset()
 #create_sum_label_sum_att_dataset()
