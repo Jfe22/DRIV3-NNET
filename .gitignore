@@ -1,5 +1,13 @@
 # logs and output dir from model
 nn/logs
+BERT_nn/logs
+BERT_nn/output
+
+# models generated, see readme for hugging face link
+models/
+
+# aux files
+TTC_nn/TTC_Template
 
 # Mac .DS_Store
 **/.DS_Store
